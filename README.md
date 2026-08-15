@@ -187,7 +187,6 @@ npm run scan
 
 - `Suno_로그인_준비.cmd`: 로그인용 Chrome만 열기
 - `Suno_전체_백업_실행.cmd`: MP3/WAV/둘 다 선택 후 전체 백업
-- `Suno_WAV_백업_실행.cmd`: WAV만 바로 백업
 
 데스크톱 앱을 개발 모드로 실행하거나 Windows 배포본을 빌드합니다.
 
