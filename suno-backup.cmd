@@ -38,7 +38,34 @@ if not exist ".browser-profile\.manual-login-complete" (
   if errorlevel 1 goto end
 )
 
-call npm start
+if not "%~1"=="" (
+  call npm start -- %*
+  goto end
+)
+
+echo.
+echo Select the audio format to download:
+echo   [1] MP3 only
+echo   [2] WAV only
+echo   [3] MP3 + WAV
+echo.
+choice /c 123 /n /m "Enter 1, 2, or 3: "
+if errorlevel 3 (
+  set "SUNO_FORMAT=both"
+  goto format_selected
+)
+if errorlevel 2 (
+  set "SUNO_FORMAT=wav"
+  goto format_selected
+)
+if errorlevel 1 (
+  set "SUNO_FORMAT=mp3"
+  goto format_selected
+)
+goto end
+
+:format_selected
+call npm start -- --format %SUNO_FORMAT%
 
 :end
 echo.

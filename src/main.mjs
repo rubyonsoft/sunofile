@@ -4,6 +4,11 @@ import process from 'node:process';
 import { fileURLToPath } from 'node:url';
 import { chromium } from 'playwright';
 import {
+  downloadFormatLabel,
+  normalizeDownloadFormat,
+  shouldDownloadFormat,
+} from './download-formats.mjs';
+import {
   isMp3File,
   isWavFile,
   loadManifest,
@@ -32,10 +37,13 @@ Suno account backup (WAV + MP3 + lyrics + prompts)
 
 Usage:
   npm start                  Back up every unique song in every Workspace
+  npm start -- --format mp3  Download MP3 files only
+  npm start -- --format wav  Download WAV files only
   npm start -- --limit 3     Process only the first 3 unique songs
   npm run scan              List unique songs without downloading
 
 Options:
+  --format FORMAT           Audio format: mp3, wav, or both (default: both)
   --limit N                 Maximum number of unique songs for this run
   --dry-run                 Scan and print only; do not write download files
   --help                    Show this help
@@ -43,12 +51,15 @@ Options:
 }
 
 function parseArguments(argv) {
-  const result = { dryRun: false, limit: 0 };
+  const result = { dryRun: false, limit: 0, format: 'both' };
   for (let index = 0; index < argv.length; index += 1) {
     const argument = argv[index];
     if (argument === '--dry-run') result.dryRun = true;
     else if (argument === '--help' || argument === '-h') result.help = true;
-    else if (argument === '--limit') {
+    else if (argument === '--format') {
+      result.format = normalizeDownloadFormat(argv[index + 1]);
+      index += 1;
+    } else if (argument === '--limit') {
       const value = Number(argv[index + 1]);
       if (!Number.isInteger(value) || value < 1) throw new Error('--limit 뒤에는 1 이상의 정수를 입력하세요.');
       result.limit = value;
@@ -273,7 +284,7 @@ async function isNonBlankTextFile(filePath) {
   }
 }
 
-async function allArtifactsExist(paths) {
+async function allArtifactsExist(paths, downloadFormat = 'both') {
   const [wav, mp3, lyrics, prompt, metadata] = await Promise.all([
     isWavFile(paths.wav),
     isMp3File(paths.mp3),
@@ -281,13 +292,19 @@ async function allArtifactsExist(paths) {
     isNonBlankTextFile(paths.prompt),
     isNonBlankTextFile(paths.metadata),
   ]);
-  return wav && mp3 && lyrics && prompt && metadata;
+  return (
+    (!shouldDownloadFormat(downloadFormat, 'wav') || wav)
+    && (!shouldDownloadFormat(downloadFormat, 'mp3') || mp3)
+    && lyrics
+    && prompt
+    && metadata
+  );
 }
 
-async function processSong(page, config, song, workspace, entry, manifestPath, manifest) {
+async function processSong(page, config, song, workspace, entry, manifestPath, manifest, downloadFormat) {
   const paths = ensureArtifactPaths(entry, config);
   await mkdir(path.dirname(paths.wav), { recursive: true });
-  if (await allArtifactsExist(paths)) {
+  if (await allArtifactsExist(paths, downloadFormat)) {
     entry.status = 'complete';
     console.log(`  건너뜀(완료): ${entry.baseName}`);
     return { completed: true, skipped: true };
@@ -336,7 +353,7 @@ async function processSong(page, config, song, workspace, entry, manifestPath, m
       }
       await saveManifest(manifestPath, manifest);
 
-      if (!await isMp3File(paths.mp3)) {
+      if (shouldDownloadFormat(downloadFormat, 'mp3') && !await isMp3File(paths.mp3)) {
         console.log('    MP3 다운로드 중...');
         await downloadMp3FromUrl(page.request, metadata.audioUrl, paths.mp3, config.downloadTimeoutMs);
         if (!await isMp3File(paths.mp3)) throw new Error('MP3 파일 검증에 실패했습니다.');
@@ -344,7 +361,7 @@ async function processSong(page, config, song, workspace, entry, manifestPath, m
         console.log('    MP3 다운로드 완료');
       }
 
-      if (!await isWavFile(paths.wav)) {
+      if (shouldDownloadFormat(downloadFormat, 'wav') && !await isWavFile(paths.wav)) {
         console.log('    WAV 다운로드 중...');
         await rm(paths.wav, { force: true });
         await downloadCurrentSongAsWav(page, paths.wav, config.downloadTimeoutMs);
@@ -353,7 +370,7 @@ async function processSong(page, config, song, workspace, entry, manifestPath, m
         console.log('    WAV 다운로드 완료');
       }
 
-      if (!await allArtifactsExist(paths)) throw new Error('일부 백업 파일이 누락되었습니다.');
+      if (!await allArtifactsExist(paths, downloadFormat)) throw new Error('일부 백업 파일이 누락되었습니다.');
       entry.status = 'complete';
       entry.completedAt = new Date().toISOString();
       delete entry.error;
@@ -478,7 +495,16 @@ async function processWorkspace(
       let songRecoveryAttempts = 0;
       while (!result) {
         try {
-          result = await processSong(page, config, song, workspace, entry, manifestPath, manifest);
+          result = await processSong(
+            page,
+            config,
+            song,
+            workspace,
+            entry,
+            manifestPath,
+            manifest,
+            arguments_.format,
+          );
         } catch (error) {
           if (!isTargetClosedError(error)) throw error;
           songRecoveryAttempts += 1;
@@ -535,6 +561,8 @@ async function main() {
   config.browserProfileDirectory = resolveProjectPath(config.browserProfileDirectory);
   config.logDirectory = resolveProjectPath(config.logDirectory);
   validateConfig(config);
+
+  console.log(`다운로드 형식: ${downloadFormatLabel(arguments_.format)}`);
 
   await mkdir(config.downloadDirectory, { recursive: true });
   await mkdir(config.browserProfileDirectory, { recursive: true });
