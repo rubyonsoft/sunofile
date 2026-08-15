@@ -1,0 +1,18 @@
+{
+  "name": "suno-account-backup",
+  "version": "2.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Resumable Suno account backup for WAV, MP3, lyrics, and prompts",
+  "scripts": {
+    "start": "node src/main.mjs",
+    "scan": "node src/main.mjs --dry-run",
+    "test": "node --test"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "playwright": "1.62.1"
+  }
+}

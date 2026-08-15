@@ -1,0 +1,17 @@
+{
+  "workspaceDiscoveryUrl": "https://suno.com/create?wid=YOUR_WORKSPACE_ID",
+  "includeArchivedWorkspaces": true,
+  "downloadDirectory": "./downloads",
+  "browserProfileDirectory": "./.browser-profile",
+  "logDirectory": "./logs",
+  "delayBetweenDownloadsMs": 3500,
+  "scanWaitMs": 1200,
+  "maxScanRounds": 250,
+  "stagnantScanRounds": 6,
+  "workspaceDiscoveryWaitMs": 20000,
+  "navigationTimeoutMs": 45000,
+  "downloadTimeoutMs": 120000,
+  "downloadRetryCount": 2,
+  "browserRestartCount": 3,
+  "numberWidth": 3
+}

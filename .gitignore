@@ -1,0 +1,21 @@
+node_modules/
+.env
+.env.*
+config.json
+.browser-profile/
+.playwright-downloads/
+downloads/*
+!downloads/.gitkeep
+logs/*
+!logs/.gitkeep
+
+# Never commit downloaded audio, even if the output directory changes.
+*.wav
+*.mp3
+*.m4a
+*.flac
+*.aac
+*.ogg
+
+npm-debug.log*
+.DS_Store
