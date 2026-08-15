@@ -119,8 +119,10 @@ async function launchLoginWindow() {
     const child = spawn(chrome, [
       `--user-data-dir=${config.browserProfileDirectory}`,
       '--no-first-run',
+      '--no-default-browser-check',
+      '--disable-background-mode',
       '--new-window',
-      'https://suno.com/me/workspaces',
+      'https://suno.com/',
     ], { stdio: 'ignore' });
     loginProcess = child;
     child.once('error', (error) => {

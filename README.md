@@ -19,14 +19,14 @@ PowerShell, 명령 프롬프트, Node.js를 설치할 필요가 없습니다. �
 
 1. [최신 버전 다운로드 페이지](https://github.com/rubyonsoft/sunofile/releases/latest)를 엽니다.
 2. 아래쪽 **Assets**를 누릅니다. 이미 파일 목록이 보이면 그대로 진행합니다.
-3. `Suno-Backup-Studio-Setup-3.0.2-x64.exe`를 누릅니다.
+3. `Suno-Backup-Studio-Setup-3.0.3-x64.exe`를 누릅니다.
 4. 다운로드가 끝나면 Windows의 **다운로드** 폴더를 엽니다.
 
 `Portable`이라고 적힌 파일은 설치하지 않고 바로 실행하는 버전입니다. 처음 사용하는 분은 `Setup` 파일을 권장합니다.
 
 ### 2. 프로그램 설치하기
 
-1. 받은 `Suno-Backup-Studio-Setup-3.0.2-x64.exe`를 두 번 클릭합니다.
+1. 받은 `Suno-Backup-Studio-Setup-3.0.3-x64.exe`를 두 번 클릭합니다.
 2. Windows가 허용 여부를 물으면 파일 이름과 게시 위치가 이 GitHub 저장소인지 확인합니다.
 3. **설치 위치 선택** 화면이 나오면 잘 모르겠을 때는 기본 위치를 그대로 사용합니다.
 4. **설치**를 누르고 완료될 때까지 기다립니다.
@@ -39,10 +39,10 @@ PowerShell, 명령 프롬프트, Node.js를 설치할 필요가 없습니다. �
 Google Chrome이 없다면 먼저 [Google Chrome](https://www.google.com/chrome/)을 설치하세요.
 
 1. 프로그램에서 **1. Suno 로그인**을 누릅니다.
-2. 별도로 열린 Chrome 창에서 본인의 Suno 계정에 로그인합니다.
-3. `https://suno.com/me/workspaces` 화면에 본인의 Workspace가 보이는지 확인합니다.
+2. Suno 첫 화면이 열린 별도의 Chrome 창에서 본인의 Suno 계정에 로그인합니다.
+3. 오른쪽 위에 본인의 프로필 아이콘이나 계정 이름이 보이는지 확인합니다.
 4. 방금 열린 **전용 Chrome 창을 완전히 닫습니다**.
-5. Suno Backup Studio 화면으로 돌아옵니다.
+5. Suno Backup Studio 화면으로 돌아옵니다. Workspace 화면은 곡 목록 확인이나 백업을 시작할 때 프로그램이 자동으로 엽니다.
 
 Google 로그인 화면에 `브라우저 또는 앱이 안전하지 않을 수 있습니다`가 보이면 백업 자동화 창에서 로그인을 시도하지 마세요. 프로그램의 **1. Suno 로그인** 버튼이 연 일반 Chrome 창에서 로그인해야 합니다.
 
@@ -121,9 +121,9 @@ Suno Backup/
 
 1. 자동화로 열린 Chrome 창을 모두 닫습니다.
 2. 앱의 **1. Suno 로그인**을 다시 누릅니다.
-3. Suno 로그인 후 `https://suno.com/me/workspaces`에 본인의 목록이 보이는지 확인합니다.
+3. Suno 첫 화면에서 로그인된 계정의 프로필 아이콘이나 계정 이름을 확인합니다.
 4. 전용 Chrome 창을 완전히 닫습니다.
-5. **곡 목록 확인** 또는 **전체 백업 시작**을 다시 누릅니다.
+5. **곡 목록 확인** 또는 **전체 백업 시작**을 다시 누릅니다. 프로그램이 `https://suno.com/me/workspaces`를 자동으로 엽니다.
 
 ### MP3는 받았는데 WAV가 실패합니다
 
