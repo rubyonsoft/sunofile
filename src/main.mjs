@@ -570,6 +570,8 @@ async function main() {
   validateConfig(config);
 
   console.log(`다운로드 형식: ${downloadFormatLabel(arguments_.format)}`);
+  console.log(`백업 저장 폴더: ${config.downloadDirectory}`);
+  console.log(`빠른 Workspace 건너뛰기: ${config.fastSkipByAudioFileCount ? '사용' : '사용 안 함'}`);
 
   await mkdir(config.downloadDirectory, { recursive: true });
   await mkdir(config.browserProfileDirectory, { recursive: true });
