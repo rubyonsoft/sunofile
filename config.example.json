@@ -1,5 +1,6 @@
 {
   "includeArchivedWorkspaces": true,
+  "fastSkipByAudioFileCount": false,
   "downloadDirectory": "./downloads",
   "browserProfileDirectory": "./.browser-profile",
   "logDirectory": "./logs",

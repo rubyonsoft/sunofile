@@ -54,6 +54,7 @@ function setRunning(running, options = {}) {
 function fillConfig(config) {
   elements.downloadDirectory.value = config.downloadDirectory || '';
   elements.includeArchived.checked = config.includeArchivedWorkspaces;
+  elements.fastSkipByAudioFileCount.checked = Boolean(config.fastSkipByAudioFileCount);
   elements.delayMs.value = config.delayBetweenDownloadsMs;
   elements.retryCount.value = config.downloadRetryCount;
   elements.restartCount.value = config.browserRestartCount;
@@ -86,6 +87,7 @@ async function saveSettings(event) {
     const result = await api.saveConfig({
       downloadDirectory: elements.downloadDirectory.value,
       includeArchivedWorkspaces: elements.includeArchived.checked,
+      fastSkipByAudioFileCount: elements.fastSkipByAudioFileCount.checked,
       delayBetweenDownloadsMs: Number(elements.delayMs.value),
       downloadRetryCount: Number(elements.retryCount.value),
       browserRestartCount: Number(elements.restartCount.value),
