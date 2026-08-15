@@ -16,6 +16,7 @@ const moduleDirectory = path.dirname(fileURLToPath(import.meta.url));
 let mainWindow = null;
 let worker = null;
 let workerMode = null;
+let loginProcess = null;
 let pendingQuit = false;
 let allowQuit = false;
 
@@ -68,6 +69,7 @@ async function currentState() {
     config,
     configured: true,
     running: Boolean(worker),
+    loggingIn: Boolean(loginProcess),
     mode: workerMode,
     stats: await readStats(config),
     version: app.getVersion(),
@@ -106,20 +108,29 @@ async function findChrome() {
 
 async function launchLoginWindow() {
   if (worker) throw new Error('백업 또는 스캔을 중지한 뒤 로그인하세요.');
+  if (loginProcess) throw new Error('이미 로그인용 Chrome이 열려 있습니다. 해당 창을 먼저 닫으세요.');
   const chrome = await findChrome();
   if (!chrome) throw new Error('Google Chrome을 찾지 못했습니다. Chrome을 설치한 뒤 다시 시도하세요.');
   const config = await loadConfig();
   await mkdir(config.browserProfileDirectory, { recursive: true });
 
   return new Promise((resolve, reject) => {
+    let launchFailed = false;
     const child = spawn(chrome, [
       `--user-data-dir=${config.browserProfileDirectory}`,
       '--no-first-run',
       '--new-window',
       'https://suno.com/me/workspaces',
     ], { stdio: 'ignore' });
-    child.once('error', (error) => reject(new Error(`Chrome을 열지 못했습니다: ${error.message}`)));
+    loginProcess = child;
+    child.once('error', (error) => {
+      launchFailed = true;
+      loginProcess = null;
+      reject(new Error(`Chrome을 열지 못했습니다: ${error.message}`));
+    });
     child.once('exit', async () => {
+      loginProcess = null;
+      if (launchFailed) return;
       await writeFile(path.join(config.browserProfileDirectory, '.manual-login-complete'), 'ready\n', 'utf8').catch(() => {});
       resolve({ success: true });
     });
@@ -153,6 +164,7 @@ function connectOutput(stream, level) {
 
 async function startWorker({ mode = 'backup', limit = 0, format = 'both' } = {}) {
   if (worker) throw new Error('이미 작업이 실행 중입니다.');
+  if (loginProcess) throw new Error('로그인용 Chrome을 완전히 닫은 뒤 다시 시작하세요.');
   const config = await loadConfig();
   await mkdir(config.downloadDirectory, { recursive: true });
 

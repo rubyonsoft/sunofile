@@ -161,6 +161,55 @@ async function readWorkspaceCards(page, archived) {
   }, archived);
 }
 
+export function mergeWorkspaceCards(current, incoming) {
+  const cards = new Map();
+  for (const card of [...current, ...incoming]) {
+    const key = card.id || `${card.archived ? 'archived' : 'active'}\u0000${card.name}\u0000${card.songCount}`;
+    cards.set(key, card);
+  }
+  return [...cards.values()];
+}
+
+async function scrollWorkspaceListToEnd(page) {
+  return page.locator('a[href*="/create?wid="], div[role="button"]').evaluateAll((elements) => {
+    const normalize = (value) => value?.replace(/\s+/g, ' ').trim() ?? '';
+    const card = elements.find((element) => [...element.querySelectorAll('span')]
+      .some((span) => /^[\d,]+\s+Songs?\b/i.test(normalize(span.textContent))));
+    let scroller = card?.parentElement;
+    while (scroller) {
+      const style = getComputedStyle(scroller);
+      if (/(auto|scroll)/.test(style.overflowY) && scroller.scrollHeight > scroller.clientHeight + 1) break;
+      scroller = scroller.parentElement;
+    }
+    if (!scroller) return null;
+
+    const before = scroller.scrollTop;
+    const maximum = Math.max(0, scroller.scrollHeight - scroller.clientHeight);
+    scroller.scrollTop = maximum;
+    scroller.dispatchEvent(new Event('scroll', { bubbles: true }));
+    return { before, top: scroller.scrollTop, maximum };
+  });
+}
+
+async function readAllWorkspaceCards(page, archived, config) {
+  let cards = [];
+  let stagnantRounds = 0;
+
+  for (let round = 1; round <= config.maxScanRounds; round += 1) {
+    const sizeBefore = cards.length;
+    cards = mergeWorkspaceCards(cards, await readWorkspaceCards(page, archived));
+    const scroll = await scrollWorkspaceListToEnd(page);
+    if (!scroll) break;
+
+    await page.waitForTimeout(config.scanWaitMs);
+    if (scroll.before >= scroll.maximum && cards.length === sizeBefore) stagnantRounds += 1;
+    else stagnantRounds = 0;
+    if (stagnantRounds >= config.stagnantScanRounds) break;
+  }
+
+  return cards;
+}
+
 async function clickDomButtonByAriaLabel(page, label) {
   return page.locator('button').evaluateAll((buttons, target) => {
     const button = buttons.find((element) => element.getAttribute('aria-label') === target);
@@ -170,14 +219,14 @@ async function clickDomButtonByAriaLabel(page, label) {
   }, label);
 }
 
-async function ensureActiveWorkspaceList(page, timeoutMs) {
-  const deadline = Date.now() + timeoutMs;
+async function ensureActiveWorkspaceList(page, config) {
+  const deadline = Date.now() + config.workspaceDiscoveryWaitMs;
   while (Date.now() < deadline) {
     if (await clickDomButtonByAriaLabel(page, 'View Active')) {
       await page.waitForTimeout(600);
     }
     const cards = await readWorkspaceCards(page, false);
-    if (cards.length) return cards;
+    if (cards.length) return readAllWorkspaceCards(page, false, config);
 
     const opened = await page.locator('button, [role="button"]').evaluateAll((elements) => {
       const element = elements.find((candidate) => {
@@ -238,7 +287,7 @@ export async function discoverWorkspaces(page, config, onProgress = () => {}) {
   await dismissCookieBanner(page);
   if (await isLoginRequired(page)) return [];
 
-  const activeCards = await ensureActiveWorkspaceList(page, config.workspaceDiscoveryWaitMs);
+  const activeCards = await ensureActiveWorkspaceList(page, config);
   const discovered = [];
   for (const [index, card] of activeCards.entries()) {
     const workspace = await selectWorkspaceCard(page, card, config.workspaceDiscoveryWaitMs);
@@ -250,7 +299,7 @@ export async function discoverWorkspaces(page, config, onProgress = () => {}) {
     const opened = await clickDomButtonByAriaLabel(page, 'View Archived');
     if (opened) {
       await page.waitForTimeout(700);
-      const archivedCards = await readWorkspaceCards(page, true);
+      const archivedCards = await readAllWorkspaceCards(page, true, config);
       for (const [index, card] of archivedCards.entries()) {
         const workspace = await selectWorkspaceCard(page, card, config.workspaceDiscoveryWaitMs);
         discovered.push(workspace);

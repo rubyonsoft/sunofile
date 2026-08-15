@@ -19,14 +19,14 @@ PowerShell, 명령 프롬프트, Node.js를 설치할 필요가 없습니다. �
 
 1. [최신 버전 다운로드 페이지](https://github.com/rubyonsoft/sunofile/releases/latest)를 엽니다.
 2. 아래쪽 **Assets**를 누릅니다. 이미 파일 목록이 보이면 그대로 진행합니다.
-3. `Suno-Backup-Studio-Setup-3.0.0-x64.exe`를 누릅니다.
+3. `Suno-Backup-Studio-Setup-3.0.1-x64.exe`를 누릅니다.
 4. 다운로드가 끝나면 Windows의 **다운로드** 폴더를 엽니다.
 
 `Portable`이라고 적힌 파일은 설치하지 않고 바로 실행하는 버전입니다. 처음 사용하는 분은 `Setup` 파일을 권장합니다.
 
 ### 2. 프로그램 설치하기
 
-1. 받은 `Suno-Backup-Studio-Setup-3.0.0-x64.exe`를 두 번 클릭합니다.
+1. 받은 `Suno-Backup-Studio-Setup-3.0.1-x64.exe`를 두 번 클릭합니다.
 2. Windows가 허용 여부를 물으면 파일 이름과 게시 위치가 이 GitHub 저장소인지 확인합니다.
 3. **설치 위치 선택** 화면이 나오면 잘 모르겠을 때는 기본 위치를 그대로 사용합니다.
 4. **설치**를 누르고 완료될 때까지 기다립니다.
