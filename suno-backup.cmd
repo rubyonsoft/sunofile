@@ -16,15 +16,6 @@ if not exist "config.json" (
   )
   copy /y "config.example.json" "config.json" >nul
   echo [SETUP] config.json was created.
-  echo Replace YOUR_WORKSPACE_ID with one of your Suno Workspace IDs,
-  echo then run this file again.
-  goto end
-)
-
-findstr /c:"YOUR_WORKSPACE_ID" "config.json" >nul
-if not errorlevel 1 (
-  echo [SETUP] Open config.json and replace YOUR_WORKSPACE_ID first.
-  goto end
 )
 
 if not exist "node_modules\playwright\package.json" (
