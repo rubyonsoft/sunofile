@@ -430,7 +430,7 @@ async function processWorkspace(
       lastReportedCount = count;
     }
   });
-  process.stdout.write('\n');
+  process.stdout.write(`\n  목록 수집 완료: ${songs.length}곡\n`);
 
   if (!songs.length) {
     if (workspace.songCount > 0) console.warn(`  화면에서 곡을 찾지 못했습니다. 예상 곡 수: ${workspace.songCount}`);
