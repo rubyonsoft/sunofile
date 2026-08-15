@@ -1,18 +1,63 @@
 {
   "name": "suno-account-backup",
-  "version": "2.0.0",
+  "version": "3.0.0",
   "private": true,
   "type": "module",
+  "main": "electron/main.mjs",
+  "productName": "Suno Backup Studio",
+  "author": "Rubyonsoft",
+  "homepage": "https://github.com/rubyonsoft/sunofile",
   "description": "Resumable Suno account backup for WAV, MP3, lyrics, and prompts",
   "scripts": {
     "start": "node src/main.mjs",
+    "desktop": "electron .",
     "scan": "node src/main.mjs --dry-run",
-    "test": "node --test"
+    "test": "node --test",
+    "pack": "electron-builder --dir",
+    "dist:win": "electron-builder --win"
   },
   "engines": {
     "node": ">=20"
   },
   "dependencies": {
     "playwright": "1.62.1"
+  },
+  "devDependencies": {
+    "electron": "^43.4.0",
+    "electron-builder": "^26.15.3"
+  },
+  "build": {
+    "appId": "com.rubyonsoft.sunobackupstudio",
+    "productName": "Suno Backup Studio",
+    "asar": true,
+    "directories": {
+      "output": "release",
+      "buildResources": "assets"
+    },
+    "files": [
+      "assets/icon.png",
+      "electron/**/*",
+      "src/**/*",
+      "package.json"
+    ],
+    "win": {
+      "icon": "assets/icon.ico",
+      "artifactName": "Suno-Backup-Studio-Setup-${version}-${arch}.${ext}",
+      "target": [
+        "nsis",
+        "portable"
+      ]
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "Suno Backup Studio"
+    },
+    "portable": {
+      "artifactName": "Suno-Backup-Studio-Portable-${version}-${arch}.${ext}"
+    }
   }
 }

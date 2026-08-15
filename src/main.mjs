@@ -29,6 +29,9 @@ import {
 } from './suno.mjs';
 
 const projectDirectory = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
+const runtimeDirectory = process.env.SUNO_DATA_DIRECTORY
+  ? path.resolve(process.env.SUNO_DATA_DIRECTORY)
+  : projectDirectory;
 const accountManifestFilename = 'account-download-history.json';
 
 function printHelp() {
@@ -71,8 +74,8 @@ function parseArguments(argv) {
   return result;
 }
 
-function resolveProjectPath(value) {
-  return path.resolve(projectDirectory, value);
+function resolveRuntimePath(value) {
+  return path.resolve(runtimeDirectory, value);
 }
 
 function validateConfig(config) {
@@ -109,7 +112,7 @@ async function launchBrowser(config) {
       headless: false,
       viewport: { width: 1440, height: 1000 },
       acceptDownloads: true,
-      downloadsPath: resolveProjectPath('./.playwright-downloads'),
+      downloadsPath: resolveRuntimePath('./.playwright-downloads'),
       args: ['--start-maximized'],
     });
   } catch (error) {
@@ -537,7 +540,7 @@ async function main() {
     return;
   }
 
-  const configPath = path.join(projectDirectory, 'config.json');
+  const configPath = path.join(runtimeDirectory, 'config.json');
   let config;
   try {
     config = JSON.parse(await readFile(configPath, 'utf8'));
@@ -549,9 +552,9 @@ async function main() {
     }
     throw error;
   }
-  config.downloadDirectory = resolveProjectPath(config.downloadDirectory);
-  config.browserProfileDirectory = resolveProjectPath(config.browserProfileDirectory);
-  config.logDirectory = resolveProjectPath(config.logDirectory);
+  config.downloadDirectory = resolveRuntimePath(config.downloadDirectory);
+  config.browserProfileDirectory = resolveRuntimePath(config.browserProfileDirectory);
+  config.logDirectory = resolveRuntimePath(config.logDirectory);
   validateConfig(config);
 
   console.log(`다운로드 형식: ${downloadFormatLabel(arguments_.format)}`);
@@ -563,10 +566,19 @@ async function main() {
   console.log('Suno 전용 Chrome을 여는 중...');
   let context = await launchBrowser(config);
   let interrupted = false;
-  process.once('SIGINT', () => {
+  const requestStop = () => {
+    if (interrupted) return;
     interrupted = true;
     console.log('\n현재 파일 처리가 끝나면 안전하게 종료합니다...');
-  });
+  };
+  process.once('SIGINT', requestStop);
+  if (process.env.SUNO_DESKTOP === '1') {
+    process.stdin.setEncoding('utf8');
+    process.stdin.on('data', (chunk) => {
+      if (chunk.includes('__SUNO_STOP__')) requestStop();
+    });
+    process.stdin.unref?.();
+  }
 
   try {
     let page = configurePage(context.pages()[0] ?? await context.newPage(), config);
