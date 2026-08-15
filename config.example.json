@@ -1,5 +1,4 @@
 {
-  "workspaceDiscoveryUrl": "https://suno.com/create?wid=YOUR_WORKSPACE_ID",
   "includeArchivedWorkspaces": true,
   "downloadDirectory": "./downloads",
   "browserProfileDirectory": "./.browser-profile",

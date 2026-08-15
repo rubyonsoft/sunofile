@@ -93,13 +93,6 @@ function validateConfig(config) {
       throw new Error(`config.json의 ${key} 값은 1 이상이어야 합니다.`);
     }
   }
-  const url = new URL(config.workspaceDiscoveryUrl);
-  if (!/(^|\.)suno\.com$/i.test(url.hostname) || url.pathname !== '/create' || !url.searchParams.get('wid')) {
-    throw new Error(`올바른 Suno Workspace URL이 아닙니다: ${config.workspaceDiscoveryUrl}`);
-  }
-  if (url.searchParams.get('wid') === 'YOUR_WORKSPACE_ID') {
-    throw new Error('config.json의 YOUR_WORKSPACE_ID를 본인의 Suno Workspace ID로 바꾸세요.');
-  }
   if (typeof config.includeArchivedWorkspaces !== 'boolean') {
     throw new Error('config.json의 includeArchivedWorkspaces 값은 true 또는 false여야 합니다.');
   }
@@ -551,8 +544,7 @@ async function main() {
   } catch (error) {
     if (error.code === 'ENOENT') {
       throw new Error(
-        'config.json이 없습니다. config.example.json을 config.json으로 복사하고 '
-        + '본인의 Suno Workspace 주소를 입력하세요.',
+        'config.json이 없습니다. config.example.json을 config.json으로 복사하세요.',
       );
     }
     throw error;

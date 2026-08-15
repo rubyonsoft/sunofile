@@ -29,7 +29,7 @@ echo.
 echo The downloader will continue after Chrome is closed.
 echo.
 
-start "Suno Login" /wait "%CHROME_PATH%" "--user-data-dir=%~dp0.browser-profile" --no-first-run --new-window "https://suno.com/me"
+start "Suno Login" /wait "%CHROME_PATH%" "--user-data-dir=%~dp0.browser-profile" --no-first-run --new-window "https://suno.com/me/workspaces"
 if errorlevel 1 exit /b 1
 
 > ".browser-profile\.manual-login-complete" echo ready

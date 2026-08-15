@@ -6,6 +6,7 @@ const DOWNLOAD_TEXT = /^(download|다운로드)$/i;
 const WAV_TEXT = /^(wav audio|wav|wav 오디오)$/i;
 const DOWNLOAD_FILE_TEXT = /^(download file|파일 다운로드)$/i;
 const MORE_TEXT = /(more|option|action|ellipsis|더\s*보기|옵션|메뉴|추가)/i;
+export const WORKSPACE_DISCOVERY_URL = 'https://suno.com/me/workspaces';
 
 export function isTargetClosedError(error) {
   return /target (?:page, context or browser|page|context|browser) has been closed|browser has been closed|page has been closed|context has been closed|page crashed/i
@@ -125,7 +126,7 @@ export async function dismissCookieBanner(page) {
 }
 
 async function readWorkspaceCards(page, archived) {
-  return page.locator('div[role="button"]').evaluateAll((elements, isArchived) => {
+  return page.locator('a[href*="/create?wid="], div[role="button"]').evaluateAll((elements, isArchived) => {
     const cards = [];
     const seen = new Set();
 
@@ -146,10 +147,15 @@ async function readWorkspaceCards(page, archived) {
 
       const count = Number(countText.match(/^[\d,]+/)?.[0].replace(/,/g, ''));
       if (!name || !Number.isFinite(count)) continue;
-      const key = `${name}\u0000${count}`;
+      const link = element.matches('a[href*="/create?wid="]')
+        ? element
+        : element.closest('a[href*="/create?wid="]');
+      const url = link?.href ?? '';
+      const id = url ? new URL(url).searchParams.get('wid') ?? '' : '';
+      const key = id || `${name}\u0000${count}`;
       if (seen.has(key)) continue;
       seen.add(key);
-      cards.push({ name, songCount: count, archived: isArchived });
+      cards.push({ name, songCount: count, archived: isArchived, id, url });
     }
     return cards;
   }, archived);
@@ -189,6 +195,8 @@ async function ensureActiveWorkspaceList(page, timeoutMs) {
 }
 
 async function selectWorkspaceCard(page, card, timeoutMs) {
+  if (card.id && card.url) return card;
+
   const deadline = Date.now() + timeoutMs;
   while (Date.now() < deadline) {
     const clicked = await page.locator('div[role="button"]').evaluateAll((elements, target) => {
@@ -226,7 +234,7 @@ async function selectWorkspaceCard(page, card, timeoutMs) {
 }
 
 export async function discoverWorkspaces(page, config, onProgress = () => {}) {
-  await page.goto(config.workspaceDiscoveryUrl, { waitUntil: 'domcontentloaded' });
+  await page.goto(WORKSPACE_DISCOVERY_URL, { waitUntil: 'domcontentloaded' });
   await dismissCookieBanner(page);
   if (await isLoginRequired(page)) return [];
 
@@ -252,8 +260,7 @@ export async function discoverWorkspaces(page, config, onProgress = () => {}) {
   }
 
   const unique = [...new Map(discovered.map((workspace) => [workspace.id, workspace])).values()];
-  const launchId = new URL(config.workspaceDiscoveryUrl).searchParams.get('wid');
-  return unique.sort((left, right) => Number(right.id === launchId) - Number(left.id === launchId));
+  return unique;
 }
 
 async function findWorkspaceScroller(page) {

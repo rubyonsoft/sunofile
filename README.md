@@ -34,11 +34,11 @@ Suno에 만들어 둔 **본인 음악을 컴퓨터에 한꺼번에 보관하는 
 3. 이 프로그램을 ZIP 파일로 받습니다.
 4. ZIP 파일의 압축을 풉니다.
 5. `Suno_전체_백업_실행.cmd`를 두 번 클릭합니다.
-6. 자동으로 만들어진 `config.json`에 본인의 Suno Workspace 주소를 넣습니다.
-7. `Suno_로그인_준비.cmd`를 두 번 클릭하고 Suno에 로그인합니다.
-8. `Suno_전체_백업_실행.cmd`를 다시 두 번 클릭합니다.
-9. 숫자 `1`, `2`, `3` 중 하나를 눌러 MP3, WAV 또는 두 형식 모두를 선택합니다.
-10. 프로그램 폴더 안의 `downloads` 폴더에서 결과를 확인합니다.
+6. 자동으로 열린 Chrome에서 Suno에 로그인한 뒤 그 Chrome 창을 완전히 닫습니다.
+7. 숫자 `1`, `2`, `3` 중 하나를 눌러 MP3, WAV 또는 두 형식 모두를 선택합니다.
+8. 프로그램 폴더 안의 `downloads` 폴더에서 결과를 확인합니다.
+
+개인 Workspace 주소를 찾거나 `config.json`을 메모장으로 수정할 필요가 없습니다. 프로그램이 로그인된 계정의 `https://suno.com/me/workspaces` 페이지에서 Workspace를 자동으로 찾습니다.
 
 각 단계는 아래에서 그림 없이도 따라 할 수 있도록 자세히 설명합니다.
 
@@ -104,7 +104,7 @@ Git이나 PowerShell을 사용하지 않는 가장 쉬운 방법입니다.
 
 ---
 
-## 3단계: 처음 한 번 실행해서 설정 파일 만들기
+## 3단계: 전체 백업 실행 파일 열기
 
 1. 압축을 푼 `sunofile-main` 폴더를 엽니다.
 2. `Suno_전체_백업_실행.cmd` 파일을 찾습니다.
@@ -115,9 +115,10 @@ Git이나 PowerShell을 사용하지 않는 가장 쉬운 방법입니다.
 
 - Node.js가 설치되어 있는지 확인합니다.
 - `config.example.json`을 복사하여 `config.json`을 만듭니다.
-- Workspace 주소를 입력하라는 메시지를 표시합니다.
+- 필요한 프로그램을 설치합니다.
+- Suno 로그인용 Chrome 창을 엽니다.
 
-검은색 창에 `config.json was created` 또는 `YOUR_WORKSPACE_ID`를 바꾸라는 내용이 나타나면 정상입니다. 아무 키나 눌러 창을 닫은 뒤 다음 단계로 이동하세요.
+`config.json`은 자동으로 만들어지며, 본인의 Workspace 주소를 직접 입력할 필요가 없습니다. 로그인 후에는 `https://suno.com/me/workspaces`에서 활성 및 보관 Workspace를 자동으로 찾습니다.
 
 ### Windows에서 실행 경고가 나타나는 경우
 
@@ -127,69 +128,17 @@ Windows가 `.cmd` 파일 실행 여부를 물을 수 있습니다. 반드시 이
 
 ---
 
-## 4단계: 본인의 Suno Workspace 주소 찾기
-
-Workspace 주소에는 계정마다 다른 ID가 들어 있습니다. 이 주소 하나를 시작점으로 사용하여 계정의 활성 Workspace와 보관된 Workspace를 찾습니다.
-
-1. Google Chrome에서 [Suno](https://suno.com/)를 엽니다.
-2. 본인의 Suno 계정으로 로그인합니다.
-3. 곡을 만들 때 사용하는 Workspace 하나를 엽니다.
-4. 주소가 `https://suno.com/create?wid=...` 모양인지 확인합니다.
-5. Chrome 화면 맨 위의 주소창을 한 번 클릭합니다.
-6. 키보드의 `Ctrl` 키를 누른 상태에서 `C` 키를 눌러 주소를 복사합니다.
-
-주소는 다음과 비슷한 모양입니다.
-
-```text
-https://suno.com/create?wid=xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
-```
-
-`xxxxxxxx` 부분은 사람마다 다릅니다. 다른 사람의 Workspace 주소가 아니라 반드시 **본인 계정에서 연 Workspace 주소**를 사용하세요.
-
----
-
-## 5단계: config.json에 Workspace 주소 넣기
-
-1. 다시 `sunofile-main` 프로그램 폴더를 엽니다.
-2. `config.json` 파일을 찾습니다.
-3. `config.json`을 마우스 오른쪽 버튼으로 누릅니다.
-4. **연결 프로그램** 또는 **다른 앱 선택**을 누릅니다.
-5. **메모장**을 선택합니다.
-6. 다음 줄을 찾습니다.
-
-```text
-"workspaceDiscoveryUrl": "https://suno.com/create?wid=YOUR_WORKSPACE_ID",
-```
-
-7. 큰따옴표 안의 `https://suno.com/create?wid=YOUR_WORKSPACE_ID` 부분만 지웁니다.
-8. 키보드의 `Ctrl` 키를 누른 상태에서 `V` 키를 눌러 앞 단계에서 복사한 본인 Workspace 주소를 붙여 넣습니다.
-9. 아래처럼 큰따옴표와 줄 끝의 쉼표가 그대로 남아 있는지 확인합니다.
-
-```text
-"workspaceDiscoveryUrl": "https://suno.com/create?wid=본인의-Workspace-ID",
-```
-
-10. 메모장 위쪽의 **파일 → 저장**을 누르거나 `Ctrl` 키를 누른 상태에서 `S` 키를 누릅니다.
-11. 메모장을 닫습니다.
-
-큰따옴표(`"`)나 줄 끝의 쉼표(`,`)를 지우면 설정 파일 오류가 날 수 있습니다. 잘못 수정했다면 `config.json`을 삭제하고 `Suno_전체_백업_실행.cmd`를 다시 실행하면 기본 설정 파일을 새로 만들 수 있습니다.
-
-### config.json이 보이지 않는 경우
-
-3단계에서 `Suno_전체_백업_실행.cmd`를 먼저 한 번 실행했는지 확인하세요. 그래도 없다면 `config.example.json` 파일을 복사해서 같은 폴더에 붙여 넣은 후, 복사한 파일 이름을 `config.json`으로 바꿔도 됩니다.
-
----
-
-## 6단계: Suno 로그인 준비하기
+## 4단계: Suno 로그인하기
 
 Google은 자동화 전용 브라우저에서 로그인을 차단할 수 있습니다. 그래서 로그인할 때만 일반 Chrome 창을 사용합니다.
 
-1. 프로그램 폴더의 `Suno_로그인_준비.cmd`를 두 번 클릭합니다.
-2. 검은색 안내 창과 별도의 Chrome 창이 열립니다.
-3. 열린 Chrome 창에서 본인의 Suno 계정으로 로그인합니다.
-4. Suno의 Library 또는 곡 목록이 정상적으로 보이는지 확인합니다.
-5. 방금 열린 **전용 Chrome 창을 완전히 닫습니다**.
-6. Chrome 창이 닫히면 검은색 창에 로그인 준비가 끝났다는 메시지가 나타납니다.
+1. `Suno_전체_백업_실행.cmd`가 별도의 Chrome 창을 자동으로 엽니다.
+2. 열린 Chrome 창에서 본인의 Suno 계정으로 로그인합니다.
+3. Suno의 Library 또는 Workspace 목록이 정상적으로 보이는지 확인합니다.
+4. 방금 열린 **전용 Chrome 창을 완전히 닫습니다**.
+5. Chrome 창이 닫히면 기다리고 있던 검은색 창이 자동으로 다음 단계로 진행합니다.
+
+Chrome 창이 자동으로 열리지 않거나 로그인을 다시 해야 한다면 프로그램 폴더의 `Suno_로그인_준비.cmd`를 따로 두 번 클릭해도 됩니다.
 
 전용 로그인 정보는 프로그램 폴더의 `.browser-profile`에 저장됩니다. 평소 사용하는 Chrome 프로필에는 영향을 주지 않습니다.
 
@@ -201,12 +150,9 @@ Google은 자동화 전용 브라우저에서 로그인을 차단할 수 있습�
 
 ---
 
-## 7단계: 전체 백업 시작하기
+## 5단계: 다운로드 형식 선택하고 백업하기
 
-1. 프로그램 폴더의 `Suno_전체_백업_실행.cmd`를 두 번 클릭합니다.
-2. 검은색 창이 열립니다.
-3. 처음에는 필요한 프로그램을 자동 설치하므로 `Installing required packages`라고 표시될 수 있습니다. 인터넷 속도에 따라 몇 분 걸릴 수 있으니 창을 닫지 마세요.
-4. 다음과 같은 다운로드 형식 선택 메뉴가 나타납니다.
+로그인용 Chrome 창을 닫으면 다음과 같은 다운로드 형식 선택 메뉴가 나타납니다.
 
 ```text
 Select the audio format to download:
@@ -217,14 +163,13 @@ Select the audio format to download:
 Enter 1, 2, or 3:
 ```
 
-5. 원하는 항목의 숫자를 키보드에서 한 번 누릅니다. `Enter` 키는 누르지 않아도 됩니다.
+원하는 항목의 숫자를 키보드에서 한 번 누릅니다. `Enter` 키는 누르지 않아도 됩니다.
 
    - `1`: MP3 파일만 다운로드
    - `2`: WAV 파일만 다운로드
    - `3`: MP3와 WAV 파일을 모두 다운로드
 
-6. 전용 Chrome 창이 열리면 마우스나 키보드를 사용하지 말고 기다립니다.
-7. 프로그램이 Workspace와 곡 목록을 찾고 곡을 순서대로 저장합니다.
+선택이 끝나면 전용 Chrome 창이 열립니다. 프로그램이 `https://suno.com/me/workspaces`에서 Workspace 목록을 찾은 뒤 곡을 순서대로 저장하므로 마우스나 키보드를 사용하지 말고 기다립니다.
 
 어떤 오디오 형식을 선택해도 가사, 프롬프트와 메타데이터는 함께 저장됩니다. 나중에 다른 형식을 선택해서 다시 실행하면 기존 파일은 유지하고 새로 선택한 형식 중 빠진 파일만 추가로 받습니다.
 
@@ -247,7 +192,7 @@ Enter 1, 2, or 3:
 
 ---
 
-## 8단계: 받은 파일 확인하기
+## 6단계: 받은 파일 확인하기
 
 1. `sunofile-main` 프로그램 폴더를 엽니다.
 2. 그 안의 `downloads` 폴더를 엽니다.
@@ -316,17 +261,18 @@ Node.js가 설치되어 있지 않거나 설치 직후 Windows가 아직 인식�
 
 [Google Chrome](https://www.google.com/chrome/)을 설치한 후 다시 실행하세요. 다른 브라우저만 설치되어 있어도 이 프로그램은 Chrome을 찾습니다.
 
-### `YOUR_WORKSPACE_ID를 바꾸세요`라고 표시됩니다
+### Workspace 목록을 찾지 못했다고 표시됩니다
 
-`config.json`에 본인의 Workspace 주소가 아직 입력되지 않은 상태입니다. 이 문서의 **4단계**와 **5단계**를 다시 확인하세요.
+프로그램은 `https://suno.com/me/workspaces`에서 로그인된 계정의 목록을 자동으로 확인합니다. 전용 Chrome에서 Suno 로그인이 유지되고 있는지 확인한 뒤 `Suno_로그인_준비.cmd`를 다시 실행하세요.
 
 ### `config.json` 오류가 표시됩니다
 
-메모장으로 수정하면서 큰따옴표나 쉼표가 지워졌을 수 있습니다.
+`config.json`이 손상되었거나 이전에 직접 수정한 값에 문제가 있을 수 있습니다.
 
 1. 현재 `config.json`을 다른 이름으로 바꾸거나 삭제합니다.
 2. `Suno_전체_백업_실행.cmd`를 다시 실행하여 새 파일을 만듭니다.
-3. Workspace 주소 부분만 조심해서 다시 바꿉니다.
+
+새로 만들어진 파일에 Workspace 주소를 입력할 필요는 없습니다.
 
 ### 로그인했는데 다시 로그인하라고 합니다
 
@@ -356,7 +302,7 @@ WAV 다운로드는 해당 기능을 제공하는 Suno 구독이 필요할 수 �
 
 다음 문장을 복사해서 요청하세요.
 
-> Windows PC에 https://github.com/rubyonsoft/sunofile 프로젝트를 설치하고 실행해줘. README를 먼저 읽고 Node.js와 Chrome 설치 여부를 확인해줘. 안전한 폴더에 설치하고, config.json의 Suno Workspace 주소가 필요한 단계와 Chrome 로그인 단계에서는 내가 직접 할 수 있도록 멈춰서 알려줘. 기존 음악은 삭제하지 말고, 먼저 설정과 로그인을 확인한 다음 전체 백업을 실행해줘. 오류가 나면 원인을 확인하고 이어서 실행해줘.
+> Windows PC에 https://github.com/rubyonsoft/sunofile 프로젝트를 설치하고 실행해줘. README를 먼저 읽고 Node.js와 Chrome 설치 여부를 확인해줘. 안전한 폴더에 설치하고, Chrome 로그인 단계에서는 내가 직접 할 수 있도록 멈춰서 알려줘. Workspace 주소는 입력하지 말고 로그인된 계정의 Workspace 목록을 자동으로 사용해줘. 기존 음악은 삭제하지 말고, 오류가 나면 원인을 확인하고 이어서 실행해줘.
 
 로그인과 Windows 관리자 권한 확인 창은 사용자가 직접 승인해야 할 수 있습니다. ChatGPT나 다른 사람에게 Suno 비밀번호를 보내지 마세요.
 
@@ -366,7 +312,7 @@ WAV 다운로드는 해당 기능을 제공하는 Suno 구독이 필요할 수 �
 
 다음 항목은 Git에 올라가지 않도록 설정되어 있습니다.
 
-- 개인 Workspace 주소가 들어 있는 `config.json`
+- 실행 설정이 들어 있는 `config.json`
 - 로그인 정보가 들어 있을 수 있는 `.browser-profile` 폴더
 - `downloads` 폴더의 음악, 가사, 프롬프트 및 기록
 - `logs` 폴더의 오류 화면과 진단 정보
@@ -427,9 +373,8 @@ npm test
 
 ## 주요 설정값
 
-`config.json`에는 다음 값이 있습니다. 초보자는 `workspaceDiscoveryUrl` 이외의 값을 바꾸지 않는 것이 좋습니다.
+`config.json`에는 다음 값이 있습니다. 초보자는 값을 바꾸지 않고 기본 설정을 사용하는 것이 좋습니다.
 
-- `workspaceDiscoveryUrl`: 계정에 속한 Workspace 주소 하나
 - `includeArchivedWorkspaces`: `true`이면 보관된 Workspace도 포함
 - `downloadDirectory`: 결과 저장 폴더
 - `delayBetweenDownloadsMs`: 곡 사이 대기 시간
@@ -438,3 +383,5 @@ npm test
 - `browserRestartCount`: Chrome 종료 시 자동 복구 횟수
 
 요청 간격을 너무 짧게 줄이면 Suno 서비스에 부담을 줄 수 있으므로 기본값 사용을 권장합니다.
+
+이전 버전의 `config.json`에 `workspaceDiscoveryUrl`이 남아 있어도 새 버전에서는 사용하지 않습니다.
