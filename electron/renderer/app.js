@@ -34,18 +34,19 @@ function setRunning(running, options = {}) {
   state.running = running;
   state.mode = options.mode ?? state.mode;
   const stopping = Boolean(options.stopping);
-  elements.loginButton.disabled = running;
-  elements.scanButton.disabled = running;
-  elements.backupButton.disabled = running;
+  const busy = running || Boolean(state.loggingIn);
+  elements.loginButton.disabled = busy;
+  elements.scanButton.disabled = busy;
+  elements.backupButton.disabled = busy;
   elements.stopButton.disabled = !running || stopping;
-  elements.audioFormat.disabled = running;
-  elements.limitInput.disabled = running;
+  elements.audioFormat.disabled = busy;
+  elements.limitInput.disabled = busy;
   elements.progressBar.classList.toggle('indeterminate', running);
   elements.progressBar.style.width = running ? '' : (options.done ? '100%' : '0');
   elements.livePill.className = `live-pill${running ? ' running' : options.done ? ' done' : ''}`;
   elements.livePill.querySelector('span').textContent = stopping ? '중지 대기' : running ? '진행 중' : options.done ? '완료' : '대기';
-  elements.sideStatusDot.className = `status-dot ${running ? 'running' : 'ready'}`;
-  elements.sideStatusText.textContent = stopping ? '안전하게 중지 중' : running ? (state.mode === 'scan' ? '곡 목록 확인 중' : '백업 진행 중') : '실행 준비 완료';
+  elements.sideStatusDot.className = `status-dot ${busy ? 'running' : 'ready'}`;
+  elements.sideStatusText.textContent = stopping ? '안전하게 중지 중' : state.loggingIn ? 'Suno 로그인 중' : running ? (state.mode === 'scan' ? '곡 목록 확인 중' : '백업 진행 중') : '실행 준비 완료';
   elements.jobTitle.textContent = stopping ? '현재 파일 처리를 마치는 중' : running ? (state.mode === 'scan' ? '계정 곡 목록 확인 중' : '음악 백업 진행 중') : options.done ? '작업이 완료되었습니다' : '백업 준비 완료';
   elements.jobDescription.textContent = running ? '전용 Chrome 창을 닫지 마세요. 작업 기록에서 진행 상황을 확인할 수 있습니다.' : '로그인 상태를 확인한 뒤 전체 백업을 시작하세요.';
 }
@@ -120,7 +121,8 @@ elements.browseButton.addEventListener('click', async () => {
 });
 elements.openFolderButton.addEventListener('click', () => api.openDownloadFolder().catch((error) => showToast(errorMessage(error), true)));
 elements.loginButton.addEventListener('click', async () => {
-  elements.loginButton.disabled = true;
+  state.loggingIn = true;
+  setRunning(false);
   elements.loginButton.textContent = 'Chrome 창을 닫으면 완료됩니다…';
   try {
     await api.launchLogin();
@@ -129,8 +131,9 @@ elements.loginButton.addEventListener('click', async () => {
   } catch (error) {
     showToast(errorMessage(error), true);
   } finally {
+    state.loggingIn = false;
     elements.loginButton.textContent = '1. Suno 로그인';
-    elements.loginButton.disabled = Boolean(state?.running);
+    setRunning(Boolean(state?.running));
   }
 });
 elements.scanButton.addEventListener('click', () => startJob('scan'));
