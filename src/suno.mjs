@@ -219,63 +219,113 @@ async function clickDomButtonByAriaLabel(page, label) {
   }, label);
 }
 
-async function ensureActiveWorkspaceList(page, config) {
+async function openWorkspaceSwitcher(page) {
+  return page.locator('button, [role="button"]').evaluateAll((elements) => {
+    const element = elements.find((candidate) => {
+      const label = `${candidate.getAttribute('aria-label') ?? ''} ${candidate.textContent ?? ''}`.trim();
+      return /^Workspaces$/i.test(label) || /workspace switcher/i.test(label);
+    });
+    if (!element) return false;
+    element.click();
+    return true;
+  });
+}
+
+async function selectWorkspaceListMode(page, archived) {
+  const label = archived ? 'View Archived' : 'View Active';
+  if (await clickDomButtonByAriaLabel(page, label)) {
+    await page.waitForTimeout(700);
+    return true;
+  }
+
+  if (await openWorkspaceSwitcher(page)) await page.waitForTimeout(600);
+  if (await clickDomButtonByAriaLabel(page, label)) {
+    await page.waitForTimeout(700);
+    return true;
+  }
+  return false;
+}
+
+async function ensureWorkspaceList(page, archived, config) {
   const deadline = Date.now() + config.workspaceDiscoveryWaitMs;
   while (Date.now() < deadline) {
-    if (await clickDomButtonByAriaLabel(page, 'View Active')) {
-      await page.waitForTimeout(600);
+    const modeSelected = await selectWorkspaceListMode(page, archived);
+    const cards = await readWorkspaceCards(page, archived);
+    if (cards.length && (!archived || modeSelected)) {
+      return readAllWorkspaceCards(page, archived, config);
     }
-    const cards = await readWorkspaceCards(page, false);
-    if (cards.length) return readAllWorkspaceCards(page, false, config);
-
-    const opened = await page.locator('button, [role="button"]').evaluateAll((elements) => {
-      const element = elements.find((candidate) => {
-        const label = `${candidate.getAttribute('aria-label') ?? ''} ${candidate.textContent ?? ''}`.trim();
-        return /^Workspaces$/i.test(label) || /workspace switcher/i.test(label);
-      });
-      if (!element) return false;
-      element.click();
-      return true;
-    });
-    if (opened) await page.waitForTimeout(600);
-    else await page.waitForTimeout(300);
+    await page.waitForTimeout(300);
   }
   throw new Error('Suno Workspace 선택 목록을 찾지 못했습니다. 페이지 로딩 상태를 확인하세요.');
 }
 
-async function selectWorkspaceCard(page, card, timeoutMs) {
+async function showWorkspaceList(page, archived, config, { useHistory = false, loadAll = false } = {}) {
+  const timeoutMs = config.workspaceDiscoveryWaitMs;
+  let currentUrl = new URL(page.url());
+
+  if (currentUrl.pathname !== '/me/workspaces' && useHistory) {
+    await page.goBack({ waitUntil: 'domcontentloaded', timeout: timeoutMs }).catch(() => null);
+    currentUrl = new URL(page.url());
+  }
+
+  if (!archived && currentUrl.pathname !== '/me/workspaces') {
+    await page.goto(WORKSPACE_DISCOVERY_URL, { waitUntil: 'domcontentloaded', timeout: timeoutMs });
+  }
+
+  await dismissCookieBanner(page);
+  await selectWorkspaceListMode(page, archived);
+
+  if (loadAll) await readAllWorkspaceCards(page, archived, config);
+}
+
+async function clickWorkspaceCard(page, card) {
+  return page.locator('div[role="button"]').evaluateAll((elements, target) => {
+    const element = elements.find((candidate) => {
+      const countText = [...candidate.querySelectorAll('span')]
+        .map((span) => span.textContent?.replace(/\s+/g, ' ').trim() ?? '')
+        .find((text) => /^[\d,]+\s+Songs?\b/i.test(text));
+      const imageAlt = candidate.querySelector('img')?.getAttribute('alt') ?? '';
+      let name = imageAlt.replace(/^Cover image for\s+/i, '').trim();
+      if (!name) {
+        name = [...candidate.querySelectorAll('span')]
+          .filter((span) => span.children.length === 0)
+          .map((span) => span.textContent?.replace(/\s+/g, ' ').trim() ?? '')
+          .find((text) => text && !/^[\d,]+\s+Songs?\b/i.test(text)) ?? '';
+      }
+      const count = Number(countText?.match(/^[\d,]+/)?.[0].replace(/,/g, ''));
+      return name === target.name && count === target.songCount;
+    });
+    if (!element) return false;
+    element.click();
+    return true;
+  }, card);
+}
+
+async function selectWorkspaceCard(page, card, config) {
   if (card.id && card.url) return card;
 
-  const deadline = Date.now() + timeoutMs;
+  const deadline = Date.now() + config.workspaceDiscoveryWaitMs;
+  let listReloaded = false;
   while (Date.now() < deadline) {
-    const clicked = await page.locator('div[role="button"]').evaluateAll((elements, target) => {
-      const element = elements.find((candidate) => {
-        const countText = [...candidate.querySelectorAll('span')]
-          .map((span) => span.textContent?.replace(/\s+/g, ' ').trim() ?? '')
-          .find((text) => /^[\d,]+\s+Songs?\b/i.test(text));
-        const imageAlt = candidate.querySelector('img')?.getAttribute('alt') ?? '';
-        let name = imageAlt.replace(/^Cover image for\s+/i, '').trim();
-        if (!name) {
-          name = [...candidate.querySelectorAll('span')]
-            .filter((span) => span.children.length === 0)
-            .map((span) => span.textContent?.replace(/\s+/g, ' ').trim() ?? '')
-            .find((text) => text && !/^[\d,]+\s+Songs?\b/i.test(text)) ?? '';
-        }
-        const count = Number(countText?.match(/^[\d,]+/)?.[0].replace(/,/g, ''));
-        return name === target.name && count === target.songCount;
-      });
-      if (!element) return false;
-      element.click();
-      return true;
-    }, card);
+    const clicked = await clickWorkspaceCard(page, card);
 
     if (clicked) {
-      await page.waitForTimeout(450);
+      await page.waitForURL((candidate) => (
+        candidate.pathname === '/create' && Boolean(candidate.searchParams.get('wid'))
+      ), { timeout: Math.max(1, deadline - Date.now()) }).catch(() => {});
       const url = new URL(page.url());
       const workspaceId = url.searchParams.get('wid');
       if (url.pathname === '/create' && workspaceId) {
-        return { ...card, id: workspaceId, url: url.href };
+        const workspace = { ...card, id: workspaceId, url: url.href };
+        await showWorkspaceList(page, card.archived, config, { useHistory: true });
+        return workspace;
       }
+    }
+
+    if (!clicked && !listReloaded) {
+      await showWorkspaceList(page, card.archived, config, { loadAll: true });
+      listReloaded = true;
+      continue;
     }
     await page.waitForTimeout(250);
   }
@@ -287,24 +337,28 @@ export async function discoverWorkspaces(page, config, onProgress = () => {}) {
   await dismissCookieBanner(page);
   if (await isLoginRequired(page)) return [];
 
-  const activeCards = await ensureActiveWorkspaceList(page, config);
+  const activeCards = await ensureWorkspaceList(page, false, config);
   const discovered = [];
   for (const [index, card] of activeCards.entries()) {
-    const workspace = await selectWorkspaceCard(page, card, config.workspaceDiscoveryWaitMs);
+    const workspace = await selectWorkspaceCard(page, card, config);
     discovered.push(workspace);
     onProgress({ workspace, current: index + 1, total: activeCards.length, phase: 'active' });
   }
 
   if (config.includeArchivedWorkspaces) {
-    const opened = await clickDomButtonByAriaLabel(page, 'View Archived');
-    if (opened) {
-      await page.waitForTimeout(700);
-      const archivedCards = await readAllWorkspaceCards(page, true, config);
-      for (const [index, card] of archivedCards.entries()) {
-        const workspace = await selectWorkspaceCard(page, card, config.workspaceDiscoveryWaitMs);
-        discovered.push(workspace);
-        onProgress({ workspace, current: index + 1, total: archivedCards.length, phase: 'archived' });
-      }
+    const workspaceSwitcherHost = discovered.at(-1);
+    if (workspaceSwitcherHost) {
+      await page.goto(workspaceSwitcherHost.url, {
+        waitUntil: 'domcontentloaded',
+        timeout: config.workspaceDiscoveryWaitMs,
+      });
+      await dismissCookieBanner(page);
+    }
+    const archivedCards = await ensureWorkspaceList(page, true, config);
+    for (const [index, card] of archivedCards.entries()) {
+      const workspace = await selectWorkspaceCard(page, card, config);
+      discovered.push(workspace);
+      onProgress({ workspace, current: index + 1, total: archivedCards.length, phase: 'archived' });
     }
   }
 
