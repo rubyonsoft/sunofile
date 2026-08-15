@@ -60,6 +60,17 @@ function fillConfig(config) {
   elements.restartCount.value = config.browserRestartCount;
 }
 
+function readSettings() {
+  return {
+    downloadDirectory: elements.downloadDirectory.value,
+    includeArchivedWorkspaces: elements.includeArchived.checked,
+    fastSkipByAudioFileCount: elements.fastSkipByAudioFileCount.checked,
+    delayBetweenDownloadsMs: Number(elements.delayMs.value),
+    downloadRetryCount: Number(elements.retryCount.value),
+    browserRestartCount: Number(elements.restartCount.value),
+  };
+}
+
 function addLog(line, level = 'info') {
   elements.logOutput.querySelector('.empty-log')?.remove();
   const row = document.createElement('div');
@@ -84,14 +95,7 @@ async function refresh() {
 async function saveSettings(event) {
   event.preventDefault();
   try {
-    const result = await api.saveConfig({
-      downloadDirectory: elements.downloadDirectory.value,
-      includeArchivedWorkspaces: elements.includeArchived.checked,
-      fastSkipByAudioFileCount: elements.fastSkipByAudioFileCount.checked,
-      delayBetweenDownloadsMs: Number(elements.delayMs.value),
-      downloadRetryCount: Number(elements.retryCount.value),
-      browserRestartCount: Number(elements.restartCount.value),
-    });
+    const result = await api.saveConfig(readSettings());
     state.config = result.config;
     setStats(result.stats);
     setRunning(false);
@@ -108,7 +112,7 @@ async function startJob(mode) {
     const limit = Number(elements.limitInput.value) || 0;
     const format = elements.audioFormat.value;
     addLog(mode === 'scan' ? '곡 목록 확인을 시작합니다.' : '전체 백업을 시작합니다.');
-    await api.startJob({ mode, limit, format });
+    await api.startJob({ mode, limit, format, settings: readSettings() });
   } catch (error) {
     showToast(errorMessage(error), true);
   }

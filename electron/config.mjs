@@ -60,12 +60,22 @@ export function normalizeConfig(current, changes) {
 export async function readOrCreateConfig(filePath, defaults) {
   try {
     const saved = JSON.parse(await readFile(filePath, 'utf8'));
-    return normalizeConfig(defaults, saved);
+    const normalized = normalizeConfig(defaults, saved);
+    if (JSON.stringify(normalized) !== JSON.stringify(saved)) {
+      await saveConfig(filePath, normalized);
+    }
+    return normalized;
   } catch (error) {
     if (error?.code !== 'ENOENT') throw new Error(`설정 파일을 읽을 수 없습니다: ${error.message}`);
     await saveConfig(filePath, defaults);
     return defaults;
   }
+}
+
+export async function saveConfigChanges(filePath, current, changes) {
+  const next = normalizeConfig(current, changes ?? {});
+  await saveConfig(filePath, next);
+  return next;
 }
 
 export async function saveConfig(filePath, config) {

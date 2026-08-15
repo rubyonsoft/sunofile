@@ -7,9 +7,8 @@ import { app, BrowserWindow, dialog, ipcMain, shell } from 'electron';
 import { normalizeDownloadFormat } from '../src/download-formats.mjs';
 import {
   createDefaultConfig,
-  normalizeConfig,
   readOrCreateConfig,
-  saveConfig,
+  saveConfigChanges,
 } from './config.mjs';
 
 const moduleDirectory = path.dirname(fileURLToPath(import.meta.url));
@@ -164,10 +163,13 @@ function connectOutput(stream, level) {
   });
 }
 
-async function startWorker({ mode = 'backup', limit = 0, format = 'both' } = {}) {
+async function startWorker({ mode = 'backup', limit = 0, format = 'both', settings } = {}) {
   if (worker) throw new Error('이미 작업이 실행 중입니다.');
   if (loginProcess) throw new Error('로그인용 Chrome을 완전히 닫은 뒤 다시 시작하세요.');
-  const config = await loadConfig();
+  const current = await loadConfig();
+  const config = settings
+    ? await saveConfigChanges(configPath(), current, settings)
+    : current;
   await mkdir(config.downloadDirectory, { recursive: true });
 
   const args = [path.join(app.getAppPath(), 'src', 'main.mjs')];
@@ -266,8 +268,7 @@ ipcMain.handle('app:get-state', () => currentState());
 ipcMain.handle('config:save', async (_event, changes) => {
   if (worker) throw new Error('작업 중에는 설정을 변경할 수 없습니다.');
   const current = await loadConfig();
-  const next = normalizeConfig(current, changes ?? {});
-  await saveConfig(configPath(), next);
+  const next = await saveConfigChanges(configPath(), current, changes);
   return { config: next, stats: await readStats(next), configured: true };
 });
 ipcMain.handle('folder:choose', async () => {
