@@ -14,7 +14,7 @@
     "scan": "node src/main.mjs --dry-run",
     "test": "node --test",
     "pack": "electron-builder --dir",
-    "dist:win": "electron-builder --win"
+    "dist:win": "electron-builder --win --publish never"
   },
   "engines": {
     "node": ">=20"
