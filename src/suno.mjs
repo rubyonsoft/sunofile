@@ -388,7 +388,7 @@ export async function collectWorkspaceSongs(page, config, onProgress = () => {})
 
   const songs = new Map();
   let stagnantRounds = 0;
-  let pageNumber = 1;
+  const pageNumber = 1;
 
   for (let round = 1; round <= config.maxScanRounds; round += 1) {
     const discovered = await scroller.locator('a[href*="/song/"]').evaluateAll((links) => links.map((link) => ({
@@ -421,20 +421,7 @@ export async function collectWorkspaceSongs(page, config, onProgress = () => {})
     if (scrollState.top >= scrollState.maximum && songs.size === sizeBefore) stagnantRounds += 1;
     else stagnantRounds = 0;
 
-    if (stagnantRounds >= config.stagnantScanRounds) {
-      const nextPage = await firstVisible([
-        page.getByRole('button', { name: /^Next page$/i }),
-      ]);
-      if (nextPage && await nextPage.isEnabled().catch(() => false)) {
-        await nextPage.click();
-        await page.waitForTimeout(config.scanWaitMs * 2);
-        await scroller.evaluate((element) => { element.scrollTop = 0; });
-        pageNumber += 1;
-        stagnantRounds = 0;
-      } else {
-        break;
-      }
-    }
+    if (stagnantRounds >= config.stagnantScanRounds) break;
   }
 
   const result = [...songs.values()];
