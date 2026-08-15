@@ -27,6 +27,7 @@ import {
   readCurrentSongMetadata,
   saveFailureDiagnostics,
 } from './suno.mjs';
+import { evaluateWorkspaceAudioFiles } from './workspace-skip.mjs';
 
 const projectDirectory = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const runtimeDirectory = process.env.SUNO_DATA_DIRECTORY
@@ -99,6 +100,9 @@ function validateConfig(config) {
   if (typeof config.includeArchivedWorkspaces !== 'boolean') {
     throw new Error('config.json의 includeArchivedWorkspaces 값은 true 또는 false여야 합니다.');
   }
+  if (typeof config.fastSkipByAudioFileCount !== 'boolean') {
+    throw new Error('config.json의 fastSkipByAudioFileCount 값은 true 또는 false여야 합니다.');
+  }
 }
 
 function sleep(milliseconds) {
@@ -154,6 +158,13 @@ function assignWorkspaceFolders(workspaces) {
     used.add(folderName.toLocaleLowerCase());
     return { ...workspace, folderName };
   });
+}
+
+function audioFileCountLabel(downloadFormat, counts) {
+  const labels = [];
+  if (shouldDownloadFormat(downloadFormat, 'mp3')) labels.push(`MP3 ${counts.mp3}개`);
+  if (shouldDownloadFormat(downloadFormat, 'wav')) labels.push(`WAV ${counts.wav}개`);
+  return labels.join(', ');
 }
 
 function relativeOutputPath(config, absolutePath) {
@@ -552,6 +563,7 @@ async function main() {
     }
     throw error;
   }
+  config.fastSkipByAudioFileCount ??= false;
   config.downloadDirectory = resolveRuntimePath(config.downloadDirectory);
   config.browserProfileDirectory = resolveRuntimePath(config.browserProfileDirectory);
   config.logDirectory = resolveRuntimePath(config.logDirectory);
@@ -612,6 +624,7 @@ async function main() {
       songReferences: 0,
       duplicateReferences: 0,
       browserRecoveries: 0,
+      fastSkippedWorkspaces: 0,
       completed: 0,
       skipped: 0,
       errors: 0,
@@ -620,6 +633,26 @@ async function main() {
 
     for (const workspace of workspaces) {
       if (interrupted || (arguments_.limit > 0 && state.uniqueSongIds.size >= arguments_.limit)) break;
+      if (config.fastSkipByAudioFileCount && !arguments_.dryRun) {
+        const workspaceDirectory = path.join(config.downloadDirectory, workspace.folderName);
+        try {
+          const evaluation = await evaluateWorkspaceAudioFiles(
+            workspaceDirectory,
+            workspace.songCount,
+            arguments_.format,
+          );
+          if (evaluation.skip) {
+            state.fastSkippedWorkspaces += 1;
+            console.log(
+              `\n[Workspace: ${workspace.name}] 빠른 건너뛰기: `
+              + `${audioFileCountLabel(arguments_.format, evaluation.counts)} / Suno 표시 ${workspace.songCount}곡`,
+            );
+            continue;
+          }
+        } catch (error) {
+          console.warn(`\n[Workspace: ${workspace.name}] 파일 수 확인 실패, 일반 확인으로 진행: ${error.message}`);
+        }
+      }
       let recoveryAttempts = 0;
       while (!interrupted) {
         try {
@@ -675,6 +708,7 @@ async function main() {
     if (arguments_.dryRun) {
       console.log('  목록 확인만 완료했습니다. 파일은 내려받지 않았습니다.');
     } else {
+      console.log(`  빠른 건너뛰기: ${state.fastSkippedWorkspaces}개 Workspace`);
       console.log(`  완료/확인: ${state.completed}곡 (기존 완료 ${state.skipped}곡 포함)`);
       console.log(`  Chrome 자동 복구: ${state.browserRecoveries}회`);
       console.log(`  오류: ${state.errors}건`);

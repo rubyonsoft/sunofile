@@ -17,6 +17,7 @@ const NUMERIC_KEYS = [
 export function createDefaultConfig(dataDirectory, downloadDirectory) {
   return {
     includeArchivedWorkspaces: true,
+    fastSkipByAudioFileCount: false,
     downloadDirectory,
     browserProfileDirectory: path.join(dataDirectory, 'browser-profile'),
     logDirectory: path.join(dataDirectory, 'logs'),
@@ -38,6 +39,9 @@ export function normalizeConfig(current, changes) {
   delete next.workspaceDiscoveryUrl;
   if ('includeArchivedWorkspaces' in changes) {
     next.includeArchivedWorkspaces = Boolean(changes.includeArchivedWorkspaces);
+  }
+  if ('fastSkipByAudioFileCount' in changes) {
+    next.fastSkipByAudioFileCount = Boolean(changes.fastSkipByAudioFileCount);
   }
   if ('downloadDirectory' in changes) {
     const value = String(changes.downloadDirectory ?? '').trim();
